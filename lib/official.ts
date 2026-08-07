@@ -2,11 +2,11 @@ import { rawDb } from "./db";
 import { cleanText, makeId } from "./security";
 
 const officialSources = [
-  { name: "学校官网", url: "https://www.cug.edu.cn/", category: "activity" },
-  { name: "教务处", url: "https://jwc.cug.edu.cn/", category: "course" },
-  { name: "校团委", url: "https://youth.cug.edu.cn/", category: "activity" },
-  { name: "研究生院", url: "https://graduate.cug.edu.cn/", category: "exam" },
-  { name: "国际合作处", url: "https://gjhzc.cug.edu.cn/", category: "abroad" },
+  { name: "学校官网", url: "https://www.cug.edu.cn/", category: "activity", studentLevel: "both" },
+  { name: "教务处", url: "https://jwc.cug.edu.cn/", category: "course", studentLevel: "undergraduate" },
+  { name: "校团委", url: "https://youth.cug.edu.cn/", category: "activity", studentLevel: "both" },
+  { name: "研究生院", url: "https://graduate.cug.edu.cn/", category: "exam", studentLevel: "graduate" },
+  { name: "国际合作处", url: "https://gjhzc.cug.edu.cn/", category: "abroad", studentLevel: "both" },
 ];
 
 function absoluteUrl(href: string, base: string) {
@@ -52,9 +52,9 @@ export async function refreshOfficialSources(force = false) {
         const url = absoluteUrl(match[1], source.url);
         if (!url || title.length < 10 || title.length > 90) continue;
         const result = await db.prepare(`INSERT OR IGNORE INTO content_items
-          (id, category, title, summary, body, audience, source_type, source_name, source_url, canonical_url, checked_at, status)
-          VALUES (?, ?, ?, ?, '', '全体学生', 'official', ?, ?, ?, CURRENT_TIMESTAMP, 'pending')`
-        ).bind(makeId("official"), source.category, title, `来自${source.name}的官方信息索引，发布前需管理员复核。`, source.name, url, url).run();
+          (id, category, title, summary, body, audience, student_level, source_type, source_name, source_url, canonical_url, checked_at, status)
+          VALUES (?, ?, ?, ?, '', '全体学生', ?, 'official', ?, ?, ?, CURRENT_TIMESTAMP, 'pending')`
+        ).bind(makeId("official"), source.category, title, `来自${source.name}的官方信息索引，发布前需管理员复核。`, source.studentLevel, source.name, url, url).run();
         if (result.meta.changes) count += 1;
         if (count >= 30) break;
       }

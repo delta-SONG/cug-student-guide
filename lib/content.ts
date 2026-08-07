@@ -1,4 +1,5 @@
 export type SourceType = "official" | "campus_org" | "student";
+export type StudentLevel = "undergraduate" | "graduate" | "both";
 
 export type ContentItem = {
   id: string;
@@ -7,6 +8,7 @@ export type ContentItem = {
   summary: string;
   body: string;
   audience: string;
+  studentLevel: StudentLevel;
   campus?: string | null;
   college?: string | null;
   sourceType: SourceType;
@@ -39,6 +41,7 @@ export const sourceLabels: Record<SourceType, string> = {
 export const seedItems: ContentItem[] = [
   {
     id: "graduate-registration-2026",
+    studentLevel: "graduate",
     category: "exam",
     title: "2026年秋季学期研究生注册安排",
     summary: "研究生院已公布线上注册时间与培养单位审核流程，请按通知要求及时完成。",
@@ -54,6 +57,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "graduate-open-day-2026",
+    studentLevel: "graduate",
     category: "postgraduate",
     title: "第十二届研招校园开放日活动安排",
     summary: "研究生院汇总各招生单位开放日方案与报名入口，适合关注推免和研究生培养的同学查阅。",
@@ -69,6 +73,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "graduate-design-competition-2026",
+    studentLevel: "graduate",
     category: "competition",
     title: "研究生“美丽中国”创新设计大赛校内选拔",
     summary: "研究生院发布校内选拔通知，正文包含赛道说明、参赛要求与校赛安排。",
@@ -82,6 +87,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "undergraduate-course-policy",
+    studentLevel: "undergraduate",
     category: "course",
     title: "本科课程修读与选课官方入口",
     summary: "集中查看选课通知、课程修读管理、专业目录、通选课专题网与教务办事指南。",
@@ -94,6 +100,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "cug-club-federation",
+    studentLevel: "both",
     category: "club",
     title: "大学生社团联合会与社团事务入口",
     summary: "校团委公开的社团管理与服务组织入口，可查询社团工作和相关通知。",
@@ -106,6 +113,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "cug-student-union",
+    studentLevel: "both",
     category: "student-union",
     title: "校学生会组织与服务信息",
     summary: "查看校学生会组织体系、权益服务、成长服务与校园活动相关信息。",
@@ -118,6 +126,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "cug-youth-activities",
+    studentLevel: "both",
     category: "activity",
     title: "校团委校园活动与实践通知",
     summary: "汇总社会实践、志愿服务、校园文化与学生组织活动的官方公告入口。",
@@ -130,6 +139,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "cug-international-cooperation",
+    studentLevel: "both",
     category: "abroad",
     title: "校际交流与国际合作官方入口",
     summary: "查看国际合作处发布的校际交流、国际项目与涉外事务通知。",
@@ -142,6 +152,7 @@ export const seedItems: ContentItem[] = [
   },
   {
     id: "competition-guidance-notice",
+    studentLevel: "both",
     category: "tutoring",
     title: "竞赛辅导内容发布说明",
     summary: "本栏目用于发布经审核的备赛经验、组队建议和校内训练资源。",

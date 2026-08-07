@@ -29,6 +29,7 @@ export const contentItems = sqliteTable("content_items", {
   college: text("college"),
   campus: text("campus"),
   audience: text("audience").notNull().default("全体学生"),
+  studentLevel: text("student_level", { enum: ["undergraduate", "graduate", "both"] }).notNull().default("both"),
   sourceType: text("source_type", { enum: ["official", "campus_org", "student"] }).notNull(),
   sourceName: text("source_name"),
   sourceUrl: text("source_url"),
@@ -45,6 +46,7 @@ export const contentItems = sqliteTable("content_items", {
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index("idx_content_status_category").on(table.status, table.category),
+  index("idx_content_status_level").on(table.status, table.studentLevel),
   index("idx_content_deadline").on(table.deadlineAt),
   uniqueIndex("idx_content_canonical_url").on(table.canonicalUrl),
 ]);

@@ -23,6 +23,21 @@ test("detail view exposes attribution and safety notice", async () => {
   assert.match(detail, /不代替校方正式通知/);
 });
 
+test("separates undergraduate and graduate information", async () => {
+  const [explorer, undergraduate, graduate, schema] = await Promise.all([
+    readFile(new URL("../app/components/HomeExplorer.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/undergraduate/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/graduate/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(explorer, /本科生专区/);
+  assert.match(explorer, /研究生专区/);
+  assert.match(explorer, /item\.studentLevel === "both"/);
+  assert.match(undergraduate, /initialLevel="undergraduate"/);
+  assert.match(graduate, /initialLevel="graduate"/);
+  assert.match(schema, /student_level/);
+});
+
 test("removes starter assets and includes the social card", async () => {
   const [page, layout, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

@@ -23,7 +23,7 @@ export async function ensureUser(user: ChatGPTUser) {
 
 export async function getPublishedContent(): Promise<ContentItem[]> {
   const result = await rawDb().prepare(`
-    SELECT id, category, title, summary, body, audience, campus, college,
+    SELECT id, category, title, summary, body, audience, student_level AS studentLevel, campus, college,
       source_type AS sourceType, COALESCE(source_name, '学生投稿') AS sourceName,
       source_url AS sourceUrl, source_published_at AS sourcePublishedAt,
       checked_at AS checkedAt, deadline_at AS deadlineAt, validity
@@ -37,7 +37,7 @@ export async function getPublishedContent(): Promise<ContentItem[]> {
 
 export async function getContentById(id: string): Promise<ContentItem | null> {
   return rawDb().prepare(`
-    SELECT id, category, title, summary, body, audience, campus, college,
+    SELECT id, category, title, summary, body, audience, student_level AS studentLevel, campus, college,
       source_type AS sourceType, COALESCE(source_name, '学生投稿') AS sourceName,
       source_url AS sourceUrl, source_published_at AS sourcePublishedAt,
       checked_at AS checkedAt, deadline_at AS deadlineAt, validity
