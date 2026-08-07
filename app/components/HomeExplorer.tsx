@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ContentItem, StudentLevel } from "../../lib/content";
 import { categories, categoryLabel, daysUntil, sourceLabels } from "../../lib/content";
 
@@ -16,11 +16,11 @@ export function HomeExplorer({ items, initialLevel = "all" }: { items: ContentIt
 
   useEffect(() => { fetch("/api/official/refresh", { method: "POST" }).catch(() => undefined); }, []);
 
-  const matchesLevel = (item: ContentItem) => level === "all" || item.studentLevel === level || item.studentLevel === "both";
+  const matchesLevel = useCallback((item: ContentItem) => level === "all" || item.studentLevel === level || item.studentLevel === "both", [level]);
   const filtered = useMemo(() => items.filter((item) => {
     const haystack = `${item.title} ${item.summary} ${item.sourceName} ${item.audience}`.toLowerCase();
     return matchesLevel(item) && (!query || haystack.includes(query.toLowerCase())) && (category === "all" || item.category === category) && (source === "all" || item.sourceType === source);
-  }), [items, query, category, source, level]);
+  }), [items, query, category, source, matchesLevel]);
 
   const deadlineItems = items.filter((item) => {
     const days = daysUntil(item.deadlineAt);
