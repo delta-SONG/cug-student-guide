@@ -1,0 +1,7 @@
+import { requireChatGPTUser } from "../chatgpt-auth";
+import { ensureUser, rawDb } from "../../lib/db";
+
+export const dynamic = "force-dynamic";
+type Row={id:string;title:string;category:string;status:string;rejection_reason:string|null;updated_at:string};
+const statusLabel:Record<string,string>={draft:"草稿",pending:"待审核",published:"已发布",rejected:"已退回",archived:"已下架"};
+export default async function MyPage(){const user=await requireChatGPTUser("/me");let rows:Row[]=[];let dbReady=true;try{await ensureUser(user);rows=(await rawDb().prepare("SELECT id,title,category,status,rejection_reason,updated_at FROM content_items WHERE author_id = ? ORDER BY updated_at DESC").bind(user.userId).all<Row>()).results;}catch{dbReady=false;}return <main className="page-shell"><div className="page-title"><span className="eyebrow">MY CONTRIBUTIONS</span><h1>我的投稿</h1><p>查看审核进度、退回原因和发布状态。</p></div>{!dbReady?<div className="notice">本地预览数据库正在准备；正式部署后投稿记录会在这里长期保存。</div>:<div className="table-card"><table className="data-table"><thead><tr><th>标题</th><th>状态</th><th>更新时间</th><th>说明</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td>{row.title}</td><td><span className={`status-chip ${row.status}`}>{statusLabel[row.status]??row.status}</span></td><td>{row.updated_at}</td><td>{row.rejection_reason??"—"}</td></tr>)}{rows.length===0&&<tr><td colSpan={4}>还没有投稿。可以从“发布信息”开始。</td></tr>}</tbody></table></div>}</main>}

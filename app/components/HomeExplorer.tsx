@@ -1,0 +1,44 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import type { ContentItem } from "../../lib/content";
+import { categories, categoryLabel, daysUntil, sourceLabels } from "../../lib/content";
+
+export function HomeExplorer({ items }: { items: ContentItem[] }) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
+  const [source, setSource] = useState("all");
+
+  useEffect(() => { fetch("/api/official/refresh", { method: "POST" }).catch(() => undefined); }, []);
+
+  const filtered = useMemo(() => items.filter((item) => {
+    const haystack = `${item.title} ${item.summary} ${item.sourceName} ${item.audience}`.toLowerCase();
+    return (!query || haystack.includes(query.toLowerCase())) && (category === "all" || item.category === category) && (source === "all" || item.sourceType === source);
+  }), [items, query, category, source]);
+
+  const deadlineItems = items.filter((item) => {
+    const days = daysUntil(item.deadlineAt);
+    return days !== null && days >= 0;
+  }).sort((a, b) => new Date(a.deadlineAt!).getTime() - new Date(b.deadlineAt!).getTime()).slice(0, 3);
+
+  return <main>
+    <section className="hero">
+      <div className="hero-contours" aria-hidden="true" />
+      <div className="hero-copy"><span className="eyebrow">中国地质大学（武汉）学生信息平台</span><h1>校园信息，<br/><em>一处查清。</em></h1><p>把散落在官网、学院和学生组织里的通知整理成可信、清楚、好找的校园指南。</p>
+        <div className="hero-search"><label className="sr-only" htmlFor="hero-query">搜索校园信息</label><span aria-hidden="true">⌕</span><input id="hero-query" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索课程、社团、竞赛或升学信息…"/><a href="#explore">开始查找</a></div>
+        <div className="trust-row"><span><i className="dot official"/>官方来源可追溯</span><span><i className="dot reviewed"/>学生投稿先审核</span><span><i className="dot fresh"/>标注核验时间</span></div>
+      </div>
+      <aside className="deadline-panel"><div className="panel-heading"><span>近期截止</span><small>按时间排序</small></div>{deadlineItems.length ? deadlineItems.map((item) => { const days = daysUntil(item.deadlineAt); return <Link key={item.id} href={`/item/${item.id}`} className="deadline-row"><div className="deadline-date"><strong>{new Date(item.deadlineAt!).getDate()}</strong><small>{new Date(item.deadlineAt!).getMonth()+1}月</small></div><div><b>{item.title}</b><span>{days === 0 ? "今天截止" : `${days}天后截止`} · {item.audience}</span></div></Link>; }) : <div className="empty-mini">暂无临近截止事项</div>}<a className="panel-more" href="#explore">查看全部信息 →</a></aside>
+    </section>
+
+    <section className="category-section"><div className="section-title"><div><span className="eyebrow">QUICK ACCESS</span><h2>你现在想了解什么？</h2></div><p>九个常用方向，官方通知与学生经验分开呈现。</p></div><div className="category-grid">{categories.map((item) => <button key={item.slug} className={category === item.slug ? "category-card active" : "category-card"} onClick={() => { setCategory(category === item.slug ? "all" : item.slug); document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" }); }}><span>{item.mark}</span><b>{item.label}</b><small>{item.description}</small><i>→</i></button>)}</div></section>
+
+    <section className="explore-section" id="explore"><div className="explore-head"><div><span className="eyebrow">INFORMATION DESK</span><h2>信息广场</h2></div><div className="filters"><select aria-label="按分类筛选" value={category} onChange={(e)=>setCategory(e.target.value)}><option value="all">全部分类</option>{categories.map((item)=><option value={item.slug} key={item.slug}>{item.label}</option>)}</select><select aria-label="按来源筛选" value={source} onChange={(e)=>setSource(e.target.value)}><option value="all">全部来源</option><option value="official">官方渠道</option><option value="campus_org">校内组织</option><option value="student">学生经验</option></select></div></div>
+      <div className="result-meta"><span>找到 <strong>{filtered.length}</strong> 条信息</span>{(query || category !== "all" || source !== "all") && <button onClick={()=>{setQuery("");setCategory("all");setSource("all")}}>清除筛选</button>}</div>
+      <div className="info-grid">{filtered.map((item) => { const days = daysUntil(item.deadlineAt); const expired = item.validity === "expired" || (days !== null && days < 0); return <article className="info-card" key={item.id}><div className="card-top"><span className={`source-pill ${item.sourceType}`}>{sourceLabels[item.sourceType]}</span><span className="category-text">{categoryLabel(item.category)}</span></div><h3><Link href={`/item/${item.id}`}>{item.title}</Link></h3><p>{item.summary}</p><div className="card-meta"><span>{item.sourceName}</span><span>{item.checkedAt ? `核验 ${item.checkedAt}` : "待核验"}</span></div>{item.deadlineAt && <div className={expired ? "deadline-tag expired" : "deadline-tag"}>{expired ? "报名已截止" : `距截止 ${days} 天`}</div>}<Link className="card-link" href={`/item/${item.id}`}>查看详情 <span>↗</span></Link></article>; })}</div>{filtered.length === 0 && <div className="empty-state"><strong>没有找到匹配内容</strong><p>换个关键词，或清除筛选条件再试试。</p></div>}
+    </section>
+
+    <section className="source-explainer"><div><span className="eyebrow light">SOURCE LABELS</span><h2>每条信息，都说明从哪里来</h2><p>平台不替学校发布政策，也不把个人体验包装成官方结论。</p></div><div className="source-legend"><div><span className="source-pill official">官方渠道</span><p>链接来自已核验的校方域名，展示原文与核验时间。</p></div><div><span className="source-pill campus_org">校内组织</span><p>来自经确认的学院、学生会或社团公开渠道。</p></div><div><span className="source-pill student">学生经验</span><p>个人亲历与方法分享，经审核后发布，供参考而非定论。</p></div></div></section>
+  </main>;
+}

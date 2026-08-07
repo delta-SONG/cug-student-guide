@@ -1,0 +1,9 @@
+"use client";
+import { useState } from "react";
+
+export function ReviewForm() {
+  const [status,setStatus]=useState("");
+  async function submit(event:React.FormEvent<HTMLFormElement>){event.preventDefault();setStatus("正在提交…");const form=new FormData(event.currentTarget);const response=await fetch("/api/reviews",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(form))});const data=await response.json().catch(()=>({error:"提交失败"}));if(!response.ok){setStatus(data.error);return;}event.currentTarget.reset();setStatus("评价已匿名提交，审核通过后计入汇总。");}
+  const metrics=[['clarity','教学清晰度'],['workload','作业量'],['assessmentPressure','考核压力'],['gain','课程收获']];
+  return <form className="form-card" onSubmit={submit}><div className="form-grid"><div className="field"><label htmlFor="courseName">课程名称</label><input id="courseName" name="courseName" maxLength={80} required/></div><div className="field"><label htmlFor="teacherName">任课教师（选填）</label><input id="teacherName" name="teacherName" maxLength={40}/></div><div className="field full"><label htmlFor="term">开课学期</label><select id="term" name="term" required><option>2025-2026学年第二学期</option><option>2025-2026学年第一学期</option><option>2024-2025学年第二学期</option></select></div><div className="field full"><label>结构化评分（1低—5高）</label><div className="ratings">{metrics.map(([name,label])=><div className="rating-field" key={name}><label htmlFor={name}>{label}</label><select id={name} name={name} defaultValue="3">{[1,2,3,4,5].map(n=><option key={n}>{n}</option>)}</select></div>)}</div></div><div className="field full"><label htmlFor="shortReview">匿名短评（300字内）</label><textarea id="shortReview" name="shortReview" maxLength={300} placeholder="只描述课程组织、授课方式、作业与考核体验，避免人身评价。"/></div></div><div className="submit-row"><button className="primary-button">匿名提交审核</button><span className="form-status" role="status">{status}</span></div></form>;
+}
