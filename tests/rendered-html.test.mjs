@@ -45,6 +45,8 @@ test("separates undergraduate and graduate information", async () => {
   ]);
   assert.match(explorer, /本科生专区/);
   assert.match(explorer, /研究生专区/);
+  assert.match(explorer, /<a href="\/undergraduate" className="path-card undergraduate"/);
+  assert.match(explorer, /<a href="\/graduate" className="path-card graduate"/);
   assert.match(explorer, /item\.studentLevel === "both"/);
   assert.match(undergraduate, /initialLevel="undergraduate"/);
   assert.match(graduate, /initialLevel="graduate"/);
