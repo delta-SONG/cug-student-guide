@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: base,
     title: { default: "地大指南｜中国地质大学（武汉）学生信息平台", template: "%s｜地大指南" },
-    description: "聚合中国地质大学（武汉）官方通知与学生经验，方便查阅选课、社团、活动、竞赛、保研、留学和考研信息。",
+    description: "聚合中国地质大学（武汉）官方通知、校内组织、非官方参考与学生经验，方便查阅选课、社团、活动、竞赛、保研、留学和考研信息。",
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
     openGraph: {
       title: "地大指南",

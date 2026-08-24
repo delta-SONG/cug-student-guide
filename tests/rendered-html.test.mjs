@@ -13,14 +13,27 @@ test("public home contains the guide, search and source labels", async () => {
   assert.match(explorer, /搜索课程、社团、竞赛或升学信息/);
   assert.match(content, /官方渠道/);
   assert.match(content, /校内组织/);
+  assert.match(content, /非官方参考/);
   assert.match(content, /学生经验/);
+  assert.match(explorer, /value="external"/);
 });
 
 test("detail view exposes attribution and safety notice", async () => {
   const detail = await readFile(new URL("../app/item/[id]/page.tsx", import.meta.url), "utf8");
   assert.match(detail, /打开原始来源/);
   assert.match(detail, /最近核验/);
+  assert.match(detail, /来源发布者/);
+  assert.match(detail, /不是校方结论/);
   assert.match(detail, /不代替校方正式通知/);
+});
+
+test("curated external records retain source links and caution labels", async () => {
+  const content = await readFile(new URL("../lib/content.ts", import.meta.url), "utf8");
+  assert.match(content, /wh\.bendibao\.com\/edu\/2026820\/199907/);
+  assert.match(content, /hicug\.cn\/pages\/jiaowuxitongshiyongzhinan/);
+  assert.match(content, /bilibili\.com\/video\/BV1a14y1D74z/);
+  assert.match(content, /sourceType: "external"/);
+  assert.match(content, /validity: "possibly_invalid"/);
 });
 
 test("separates undergraduate and graduate information", async () => {
