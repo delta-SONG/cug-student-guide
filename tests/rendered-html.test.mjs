@@ -50,7 +50,23 @@ test("separates undergraduate and graduate information", async () => {
   assert.match(explorer, /item\.studentLevel === "both"/);
   assert.match(undergraduate, /initialLevel="undergraduate"/);
   assert.match(graduate, /initialLevel="graduate"/);
+  assert.match(undergraduate, /mode="explore"/);
+  assert.match(graduate, /mode="explore"/);
   assert.match(schema, /student_level/);
+});
+
+test("navigation uses real routes and information plaza has its own page", async () => {
+  const [explorer, header, explore] = await Promise.all([
+    readFile(new URL("../app/components/HomeExplorer.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/Header.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/explore/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(header, /href="\/explore">信息广场/);
+  assert.match(explorer, /action="\/explore" method="get"/);
+  assert.match(explorer, /href={`\/explore\?category=\$\{item\.slug\}`}/);
+  assert.match(explorer, /href="\/explore">查看全部信息/);
+  assert.match(explore, /mode="explore"/);
+  assert.match(explore, /initialQuery={query}/);
 });
 
 test("removes starter assets and includes the social card", async () => {

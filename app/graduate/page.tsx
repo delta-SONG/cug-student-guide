@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 export default async function GraduatePage() {
   let communityItems: ContentItem[] = [];
   try { communityItems = await getPublishedContent(); } catch { communityItems = []; }
-  return <HomeExplorer items={[...communityItems, ...seedItems]} initialLevel="graduate" />;
+  return <HomeExplorer items={[...communityItems, ...seedItems]} mode="explore" initialLevel="graduate" />;
 }
