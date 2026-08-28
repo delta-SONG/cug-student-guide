@@ -74,6 +74,7 @@ test("official refresh tolerates a failing source and reports warnings", async (
   assert.match(official, /const warnings: string\[\] = \[\]/);
   assert.match(official, /warnings\.push/);
   assert.match(official, /warnings\.length === officialSources\.length/);
+  assert.match(official, /sourceCount >= 12/);
   assert.match(official, /return \{ skipped: false, count, warnings \}/);
 });
 

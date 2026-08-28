@@ -53,7 +53,8 @@ export async function refreshOfficialSources(force = false) {
           return response.text();
         });
         const links = [...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
-        for (const match of links.slice(0, 120)) {
+        let sourceCount = 0;
+        for (const match of links.slice(0, 160)) {
           const title = stripHtml(match[2]);
           const url = absoluteUrl(match[1], source.url);
           if (!url || title.length < 10 || title.length > 90) continue;
@@ -61,14 +62,16 @@ export async function refreshOfficialSources(force = false) {
             (id, category, title, summary, body, audience, student_level, source_type, source_name, source_url, canonical_url, checked_at, status)
             VALUES (?, ?, ?, ?, '', '全体学生', ?, 'official', ?, ?, ?, CURRENT_TIMESTAMP, 'pending')`
           ).bind(makeId("official"), source.category, title, `来自${source.name}的官方信息索引，发布前需管理员复核。`, source.studentLevel, source.name, url, url).run();
-          if (result.meta.changes) count += 1;
-          if (count >= 30) break;
+          if (result.meta.changes) {
+            count += 1;
+            sourceCount += 1;
+          }
+          if (sourceCount >= 12) break;
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "未知错误";
         warnings.push(`${source.name}: ${message}`);
       }
-      if (count >= 30) break;
     }
     if (warnings.length === officialSources.length) throw new Error(warnings.join("；"));
     await db.prepare("UPDATE ingestion_runs SET status = 'success', finished_at = CURRENT_TIMESTAMP, item_count = ?, error = ? WHERE id = ?")
