@@ -69,6 +69,14 @@ test("navigation uses real routes and information plaza has its own page", async
   assert.match(explore, /initialQuery={query}/);
 });
 
+test("official refresh tolerates a failing source and reports warnings", async () => {
+  const official = await readFile(new URL("../lib/official.ts", import.meta.url), "utf8");
+  assert.match(official, /const warnings: string\[\] = \[\]/);
+  assert.match(official, /warnings\.push/);
+  assert.match(official, /warnings\.length === officialSources\.length/);
+  assert.match(official, /return \{ skipped: false, count, warnings \}/);
+});
+
 test("removes starter assets and includes the social card", async () => {
   const [page, layout, packageJson] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

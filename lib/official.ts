@@ -35,33 +35,45 @@ export async function refreshOfficialSources(force = false) {
 
   const run = await db.prepare("INSERT INTO ingestion_runs (status) VALUES ('running') RETURNING id").first<{ id: number }>();
   let count = 0;
+  const warnings: string[] = [];
   try {
     for (const source of officialSources) {
-      await db.prepare(`INSERT INTO sources (name, base_url, kind, verified, active, last_checked_at)
-        VALUES (?, ?, 'official', 1, 1, CURRENT_TIMESTAMP)
-        ON CONFLICT(base_url) DO UPDATE SET name = excluded.name, verified = 1, active = 1, last_checked_at = CURRENT_TIMESTAMP`
-      ).bind(source.name, source.url).run();
+      try {
+        await db.prepare(`INSERT INTO sources (name, base_url, kind, verified, active, last_checked_at)
+          VALUES (?, ?, 'official', 1, 1, CURRENT_TIMESTAMP)
+          ON CONFLICT(base_url) DO UPDATE SET name = excluded.name, verified = 1, active = 1, last_checked_at = CURRENT_TIMESTAMP`
+        ).bind(source.name, source.url).run();
 
-      const html = await fetch(source.url, { headers: { "User-Agent": "CUG-Guide/1.0 source-indexer" } }).then((response) => {
-        if (!response.ok) throw new Error(`${source.name}: ${response.status}`);
-        return response.text();
-      });
-      const links = [...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
-      for (const match of links.slice(0, 120)) {
-        const title = stripHtml(match[2]);
-        const url = absoluteUrl(match[1], source.url);
-        if (!url || title.length < 10 || title.length > 90) continue;
-        const result = await db.prepare(`INSERT OR IGNORE INTO content_items
-          (id, category, title, summary, body, audience, student_level, source_type, source_name, source_url, canonical_url, checked_at, status)
-          VALUES (?, ?, ?, ?, '', '全体学生', ?, 'official', ?, ?, ?, CURRENT_TIMESTAMP, 'pending')`
-        ).bind(makeId("official"), source.category, title, `来自${source.name}的官方信息索引，发布前需管理员复核。`, source.studentLevel, source.name, url, url).run();
-        if (result.meta.changes) count += 1;
-        if (count >= 30) break;
+        const html = await fetch(source.url, { headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; CUG-Student-Guide/1.0; +https://cug-student-guide.shawn321song321.chatgpt.site)",
+          "Accept": "text/html,application/xhtml+xml",
+          "Accept-Language": "zh-CN,zh;q=0.9",
+        } }).then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.text();
+        });
+        const links = [...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
+        for (const match of links.slice(0, 120)) {
+          const title = stripHtml(match[2]);
+          const url = absoluteUrl(match[1], source.url);
+          if (!url || title.length < 10 || title.length > 90) continue;
+          const result = await db.prepare(`INSERT OR IGNORE INTO content_items
+            (id, category, title, summary, body, audience, student_level, source_type, source_name, source_url, canonical_url, checked_at, status)
+            VALUES (?, ?, ?, ?, '', '全体学生', ?, 'official', ?, ?, ?, CURRENT_TIMESTAMP, 'pending')`
+          ).bind(makeId("official"), source.category, title, `来自${source.name}的官方信息索引，发布前需管理员复核。`, source.studentLevel, source.name, url, url).run();
+          if (result.meta.changes) count += 1;
+          if (count >= 30) break;
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "未知错误";
+        warnings.push(`${source.name}: ${message}`);
       }
       if (count >= 30) break;
     }
-    await db.prepare("UPDATE ingestion_runs SET status = 'success', finished_at = CURRENT_TIMESTAMP, item_count = ? WHERE id = ?").bind(count, run?.id ?? 0).run();
-    return { skipped: false, count };
+    if (warnings.length === officialSources.length) throw new Error(warnings.join("；"));
+    await db.prepare("UPDATE ingestion_runs SET status = 'success', finished_at = CURRENT_TIMESTAMP, item_count = ?, error = ? WHERE id = ?")
+      .bind(count, warnings.length ? warnings.join("；").slice(0, 500) : null, run?.id ?? 0).run();
+    return { skipped: false, count, warnings };
   } catch (error) {
     await db.prepare("UPDATE ingestion_runs SET status = 'failed', finished_at = CURRENT_TIMESTAMP, error = ? WHERE id = ?")
       .bind(error instanceof Error ? error.message.slice(0, 500) : "未知错误", run?.id ?? 0).run();
