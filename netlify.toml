@@ -4,5 +4,5 @@
 [[redirects]]
   from = "/*"
   to = "https://cug-student-guide.shawn321song321.chatgpt.site/:splat"
-  status = 302
+  status = 200
   force = true
